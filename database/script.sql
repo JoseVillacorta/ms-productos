@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS productos (
     fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Procedimiento para actualizar stock (EXACTAMENTE como pidió el profesor)
+-- Procedimiento para actualizar stock 
 CREATE OR REPLACE FUNCTION actualizar_stock(
     p_producto_id BIGINT,
     p_cantidad INTEGER
@@ -25,7 +25,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Procedimiento para obtener productos con bajo stock (EXACTAMENTE como pidió el profesor)
+-- Procedimiento para obtener productos con bajo stock 
 CREATE OR REPLACE FUNCTION productos_bajo_stock(
     p_minimo INTEGER
 ) RETURNS TABLE(
