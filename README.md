@@ -1,88 +1,57 @@
-# MS Productos
+# Microservicio de Productos
 
-Microservicio de gestión de productos del Sistema de Gestión de Pedidos.
+Gestión de catálogo de productos con operaciones CRUD completas.
 
-## Descripción
+## Funcionalidades
 
-API REST completa para gestión de productos con base de datos PostgreSQL. Implementa operaciones CRUD y consultas avanzadas usando procedimientos almacenados.
+- **CRUD productos**: Crear, leer, actualizar, eliminar productos
+- **Control de stock**: Incremento/decremento automático
+- **Base de datos reactiva**: R2DBC con PostgreSQL
+- **API REST**: Endpoints funcionales con WebFlux
+- **Validación de stock**: Prevención de ventas sin inventario
 
-## Tecnologías
+## Endpoints
 
-- **Java**: 21
-- **Spring Boot**: 3.3.3
-- **WebFlux**: Programación reactiva
-- **R2DBC**: Base de datos reactiva
-- **PostgreSQL**: Base de datos
-- **Kotlin DSL**: Gradle
+- `GET /products` → Listar todos los productos
+- `GET /products/{id}` → Obtener producto específico
+- `POST /products` → Crear nuevo producto
+- `PUT /products/{id}` → Actualizar producto
+- `PUT /products/{id}/stock` → Actualizar stock
+- `GET /products/bajo-stock` → Productos con stock bajo
+- `DELETE /products/{id}` → Eliminar producto
 
-## Base de Datos
+## Configuración Docker
 
-### Tabla: productos
+- **Puerto**: 8081
+- **Base de datos**: `host.docker.internal:5432` (PostgreSQL local)
+- **Perfil**: docker
+- **Eureka**: `registry-service:8761`
+
+## Modelo de Datos
+
 ```sql
-CREATE TABLE productos (
-    id BIGSERIAL PRIMARY KEY,
-    nombre VARCHAR(255) NOT NULL,
-    descripcion TEXT,
-    precio DECIMAL(10,2) NOT NULL,
-    stock INTEGER NOT NULL DEFAULT 0,
-    activo BOOLEAN NOT NULL DEFAULT true,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE product (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    stock INTEGER NOT NULL
 );
 ```
 
-### Procedimientos Almacenados
-- `productos_bajo_stock(minimo INTEGER)`: Productos con stock bajo
-- `actualizar_stock(producto_id BIGINT, cantidad INTEGER)`: Actualizar stock
-
-## Configuración
-
-### Variables de Entorno
-- `DB_URL`: URL PostgreSQL (r2dbc:postgresql://...)
-- `DB_USERNAME`: Usuario BD
-- `DB_PASSWORD`: Contraseña BD
-
-### Perfiles
-- **dev**: Desarrollo (puerto 8081)
-- **qa**: QA (puerto 8081)
-- **prd**: Producción (puerto 8081)
-
-## Ejecución
+## Despliegue
 
 ```bash
-./gradlew bootRun --args="--spring.profiles.active=dev"
+docker-compose up --build ms-productos
 ```
 
-## API Endpoints
+## Health Check
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/api/productos` | Listar productos |
-| GET | `/api/productos/{id}` | Obtener producto |
-| POST | `/api/productos` | Crear producto |
-| PUT | `/api/productos/{id}` | Actualizar producto |
-| DELETE | `/api/productos/{id}` | Eliminar producto |
-| PUT | `/api/productos/{id}/stock` | Actualizar stock |
-| GET | `/api/productos/bajo-stock` | Productos con stock bajo |
+- Endpoint: `http://localhost:8081/actuator/health`
+- Estado esperado: `{"status":"UP"}`
 
-## Ejemplos
+## Notas
 
-### Crear producto
-```bash
-POST /api/productos
-{
-  "nombre": "Laptop Dell",
-  "descripcion": "Laptop i7 16GB",
-  "precio": 1200.00,
-  "stock": 10
-}
-```
-
-### Actualizar stock
-```bash
-PUT /api/productos/1/stock?cantidad=5
-```
-
-### Productos bajo stock
-```bash
-GET /api/productos/bajo-stock?minimo=20
-```
+- Requiere PostgreSQL corriendo en puerto 5432 local
+- Seguridad configurada para permitir `/products/**` y `/actuator/**`
+- Compatible con CORS para desarrollo frontend
