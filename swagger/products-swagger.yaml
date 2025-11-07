@@ -11,8 +11,6 @@ tags:
     description: Operaciones CRUD para la entidad Producto.
   - name: Stock Management
     description: Endpoints para modificar el stock de productos.
-  - name: Pokémon
-    description: Consumo de PokeAPI y respuesta con claves/valores en español.
 
 components:
   schemas:
@@ -46,64 +44,6 @@ components:
         - name
         - price
         - stock
-
-    PokemonES:
-      type: object
-      properties:
-        nombre:
-          type: string
-          example: Pikachu
-        altura_metros:
-          type: number
-          format: float
-          example: 0.40
-        peso_kilos:
-          type: number
-          format: float
-          example: 6.00
-        habilidades:
-          type: array
-          items:
-            type: string
-          example: ["static", "lightning-rod"]
-        tipos:
-          type: array
-          items:
-            type: string
-          example: ["electric"]
-        imagen:
-          type: string
-          format: uri
-          example: https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png
-      required:
-        - nombre
-        - altura_metros
-        - peso_kilos
-        - habilidades
-        - tipos
-
-    ApiError:
-      type: object
-      properties:
-        timestamp:
-          type: string
-          format: date-time
-          example: "2025-10-31T14:22:01Z"
-        estado:
-          type: integer
-          format: int32
-          example: 404
-        mensaje:
-          type: string
-          example: "Pokémon no encontrado: pikachu"
-        ruta:
-          type: string
-          example: "/api/pokemon/pikachu"
-      required:
-        - timestamp
-        - estado
-        - mensaje
-        - ruta
 
 paths:
   /products:
@@ -219,7 +159,7 @@ paths:
       tags:
         - Stock Management
       summary: Incrementar el stock del producto
-      description: Incrementa el stock del producto identificado por ID.
+      description: Incrementa el stock del producto identificado por ID. (Asume que la lógica en el handler aumenta el stock en una unidad o una cantidad fija).
       operationId: increaseStock
       parameters:
         - name: id
@@ -240,7 +180,7 @@ paths:
       tags:
         - Stock Management
       summary: Decrementar el stock del producto
-      description: Decrementa el stock del producto identificado por ID.
+      description: Decrementa el stock del producto identificado por ID. (Asume que la lógica en el handler reduce el stock en una unidad o una cantidad fija).
       operationId: decreaseStock
       parameters:
         - name: id
@@ -255,59 +195,3 @@ paths:
           description: Stock decrementado
         '404':
           description: Producto no encontrado
-
-  /api/pokemon/{nombre}:
-    get:
-      tags:
-        - Pokémon
-      summary: Obtener Pokémon (claves en español)
-      description: Consume PokeAPI (/pokemon/{nombre}) y transforma la respuesta a un DTO con claves en español.
-      operationId: getPokemonBasico
-      parameters:
-        - name: nombre
-          in: path
-          required: true
-          description: Nombre o ID del Pokémon (p. ej. pikachu, 25)
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PokemonES'
-        '404':
-          description: No encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-
-  /api/pokemon/{nombre}/localizado:
-    get:
-      tags:
-        - Pokémon
-      summary: Obtener Pokémon localizado (claves y valores en español)
-      description: Traduce nombre, habilidades y tipos usando los endpoints pokemon-species/{nombre}, ability/{name} y type/{name} de la PokeAPI.
-      operationId: getPokemonLocalizado
-      parameters:
-        - name: nombre
-          in: path
-          required: true
-          description: Nombre o ID del Pokémon (p. ej. pikachu, 25)
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PokemonES'
-        '404':
-          description: No encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'

@@ -42,11 +42,10 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // [B] PERMITIR RUTAS DE PRODUCTO: Acceso público al CRUD.
-                        .pathMatchers("/api/productos", "/api/productos/*", "/api/productos/*/stock", "/api/productos/bajo-stock").permitAll()
-                        .pathMatchers("/actuator/**").permitAll()
+                        .pathMatchers("/products", "/products/**").permitAll()
 
                         // [C] CUALQUIER OTRA RUTA: Requerir autenticación.
-                        .anyExchange().authenticated()
+                        .anyExchange().permitAll()
                 )
 
                 // 4. Deshabilita la autenticación por defecto (para evitar la contraseña generada)

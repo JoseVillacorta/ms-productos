@@ -1,60 +1,73 @@
 package org.example.service;
-
-import org.example.entity.Producto;
+import org.example.classes.Product;
 import org.example.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-@RequiredArgsConstructor
 public class ProductService {
+    private final ProductRepository repository;
 
-    private final ProductRepository productoRepository;
-
-    public Flux<Producto> obtenerTodos() {
-        return productoRepository.findByActivoTrue();
+    public ProductService(ProductRepository repository){
+        this.repository= repository;
     }
 
-    public Mono<Producto> obtenerPorId(Long id) {
-        return productoRepository.findById(id)
-                .filter(producto -> producto.getActivo() != null && producto.getActivo());
+    public Flux<Product> findAll(){
+        return repository.findAll();
     }
 
-    public Mono<Producto> crear(Producto producto) {
-        producto.setActivo(true);
-        producto.setFechaCreacion(java.time.LocalDateTime.now());
-        return productoRepository.save(producto);
+    public Mono<Product> findById(int id){
+        return repository.findById(id);
     }
 
-    public Mono<Producto> actualizar(Long id, Producto productoActualizado) {
-        return productoRepository.findById(id)
-                .filter(producto -> producto.getActivo() != null && producto.getActivo())
-                .flatMap(producto -> {
-                    producto.setNombre(productoActualizado.getNombre());
-                    producto.setDescripcion(productoActualizado.getDescripcion());
-                    producto.setPrecio(productoActualizado.getPrecio());
-                    producto.setStock(productoActualizado.getStock());
-                    return productoRepository.save(producto);
+    public Mono<Product> save(Product product){
+        return repository.save(product);
+    }
+
+    public Mono<Void> update(int id, Product updated){
+        return repository.updateProduct(
+                id,
+                updated.getName(),
+                updated.getDescription(),
+                updated.getPrice(),
+                updated.getStock()
+        ).then();
+    }
+
+    public Mono<Product> increaseStock(int id, int amount){
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new RuntimeException("Producto no encontrado")))
+                .flatMap(product -> {
+                    int newStock= product.getStock()+amount;
+                    product.setStock(newStock);
+                    return repository.save(product);
                 });
     }
 
-    public Mono<Boolean> eliminar(Long id) {
-        return productoRepository.findById(id)
-                .filter(producto -> producto.getActivo() != null && producto.getActivo())
-                .flatMap(producto -> {
-                    producto.setActivo(false);
-                    return productoRepository.save(producto).then(Mono.just(true));
-                })
-                .defaultIfEmpty(false);
+    public Mono<Product> decreaseStock(int id, int amount){
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new RuntimeException("Producto no encontrado")))
+                .flatMap(product -> {
+                    int newStock= product.getStock()-amount;
+                    if(newStock<0){
+                        return Mono.error(new IllegalArgumentException("No hay suficiente stock para la operación"));
+                    }
+                    product.setStock(newStock);
+                    return repository.save(product);
+                });
     }
 
-    public Mono<Void> actualizarStock(Long productoId, Integer cantidad) {
-        return productoRepository.actualizarStock(productoId, cantidad);
+    public Mono<Void> delete(int id){
+        return repository.deleteById(id);
     }
 
-    public Flux<Object[]> obtenerProductosBajoStock(Integer minimo) {
-        return productoRepository.obtenerProductosBajoStock(minimo);
+    public Mono<Void> actualizarStock(int id, int cantidad) {
+        return repository.actualizarStock(id, cantidad).then();
+    }
+
+    public Flux<Product> obtenerProductosBajoStock(int minimo) {
+        return repository.obtenerProductosBajoStock(minimo);
     }
 }

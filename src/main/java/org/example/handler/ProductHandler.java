@@ -1,73 +1,103 @@
 package org.example.handler;
 
-import org.example.entity.Producto;
+import org.example.classes.Product;
 import org.example.service.ProductService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.server.ServerRequest;
-import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 @Component
-@RequiredArgsConstructor
 public class ProductHandler {
+    private final ProductService service;
+    public ProductHandler(ProductService service){
+        this.service= service;
+    }
 
-    private final ProductService productoService;
-
-    public Mono<ServerResponse> obtenerTodos(ServerRequest request) {
+    public Mono<ServerResponse> getAll(ServerRequest request){
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(productoService.obtenerTodos(), Producto.class);
+                .body(service.findAll(), Product.class);
     }
 
-    public Mono<ServerResponse> obtenerPorId(ServerRequest request) {
-        Long id = Long.valueOf(request.pathVariable("id"));
-        return productoService.obtenerPorId(id)
-                .flatMap(producto -> ServerResponse.ok()
+    public Mono<ServerResponse> getById(ServerRequest request){
+        int id= Integer.parseInt(request.pathVariable("id"));
+        return service.findById(id)
+                .flatMap(product -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(producto))
+                        .bodyValue(product))
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
-    public Mono<ServerResponse> crear(ServerRequest request) {
-        return request.bodyToMono(Producto.class)
-                .flatMap(productoService::crear)
-                .flatMap(producto -> ServerResponse.ok()
+    public Mono<ServerResponse> create(ServerRequest request){
+        return  request.bodyToMono(Product.class)
+                .flatMap(service::save)
+                .flatMap(product -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(producto));
-    }
-
-    public Mono<ServerResponse> actualizar(ServerRequest request) {
-        Long id = Long.valueOf(request.pathVariable("id"));
-        return request.bodyToMono(Producto.class)
-                .flatMap(producto -> productoService.actualizar(id, producto))
-                .flatMap(producto -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(producto))
+                        .bodyValue(product))
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
-    public Mono<ServerResponse> eliminar(ServerRequest request) {
-        Long id = Long.valueOf(request.pathVariable("id"));
-        return productoService.eliminar(id)
-                .flatMap(eliminado -> eliminado ?
-                        ServerResponse.noContent().build() :
-                        ServerResponse.notFound().build());
+    public Mono<ServerResponse> update(ServerRequest request){
+        int id= Integer.parseInt(request.pathVariable("id"));
+        return request.bodyToMono(Product.class)
+                .flatMap(product -> service.update(id, product)
+                        .then(service.findById(id)))
+                .flatMap(updatedProduct -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(updatedProduct))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> increaseStock(ServerRequest request){
+        int id= Integer.parseInt(request.pathVariable("id"));
+        return request.bodyToMono(Map.class)
+                .flatMap(body ->{
+                    int amount= (int) body.get("amount");
+                    return service.increaseStock(id, amount);
+                })
+                .flatMap(product -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(product))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+    public Mono<ServerResponse> decreaseStock(ServerRequest request){
+        int id= Integer.parseInt(request.pathVariable("id"));
+        return request.bodyToMono(Map.class)
+                .flatMap(body ->{
+                    int amount= (int) body.get("amount");
+                    return service.decreaseStock(id, amount);
+                })
+                .flatMap(product -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(product))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
+
+    public Mono<ServerResponse> delete(ServerRequest request){
+        int id= Integer.parseInt(request.pathVariable("id"));
+        return  service.delete(id)
+                .then(ServerResponse.noContent().build());
     }
 
     public Mono<ServerResponse> actualizarStock(ServerRequest request) {
-        Long id = Long.valueOf(request.pathVariable("id"));
-        Integer cantidad = Integer.valueOf(request.queryParam("cantidad").orElse("0"));
-        return productoService.actualizarStock(id, cantidad)
-                .then(ServerResponse.ok().build())
-                .onErrorResume(e -> ServerResponse.badRequest().build());
+        int id = Integer.parseInt(request.pathVariable("id"));
+        return request.bodyToMono(Map.class)
+                .flatMap(body -> {
+                    int cantidad = (int) body.get("cantidad");
+                    return service.actualizarStock(id, cantidad)
+                            .then(ServerResponse.ok().build());
+                });
     }
 
-    public Mono<ServerResponse> obtenerProductosBajoStock(ServerRequest request) {
-        Integer minimo = Integer.valueOf(request.queryParam("minimo").orElse("10"));
+    public Mono<ServerResponse> obtenerBajoStock(ServerRequest request) {
+        int minimo = Integer.parseInt(request.queryParam("minimo").orElse("10"));
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(productoService.obtenerProductosBajoStock(minimo), Object[].class);
+                .body(service.obtenerProductosBajoStock(minimo), Product.class);
     }
 }
