@@ -20,6 +20,7 @@ dependencies {
     //Springboot
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // Spring Cloud Config Client
     implementation("org.springframework.cloud:spring-cloud-starter-config")
@@ -31,6 +32,8 @@ dependencies {
 
     //Security
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.security:spring-security-oauth2-jose")
 
     //.env
     implementation("me.paulschwarz:spring-dotenv:3.0.0")

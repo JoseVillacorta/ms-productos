@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: ms-productos
+  r2dbc:
+    url: r2dbc:postgresql://db:5432/syncap
+    username: postgres
+    password: admin
+  main:
+    web-application-type: reactive
+  spring:
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuer-uri: http://localhost:9000
+server:
+  port: 8081
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://registry-service:8761/eureka/
+    initial-instance-info-replication-interval-seconds: 5
+    instance-info-replication-interval-seconds: 10
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
