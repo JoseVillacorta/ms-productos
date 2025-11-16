@@ -1,73 +1,94 @@
 package org.example.service;
-import org.example.classes.Product;
-import org.example.repository.ProductRepository;
-import org.springframework.stereotype.Service;
 
+import org.example.classes.Producto;
+import org.example.repository.ProductRepository;
+import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 @Service
 public class ProductService {
     private final ProductRepository repository;
+    private final DatabaseClient databaseClient;
 
-    public ProductService(ProductRepository repository){
-        this.repository= repository;
+    public ProductService(ProductRepository repository, DatabaseClient databaseClient) {
+        this.repository = repository;
+        this.databaseClient = databaseClient;
     }
 
-    public Flux<Product> findAll(){
+    public Flux<Producto> findAll() {
         return repository.findAll();
     }
 
-    public Mono<Product> findById(int id){
+    public Mono<Producto> findById(Long id) {
         return repository.findById(id);
     }
 
-    public Mono<Product> save(Product product){
-        return repository.save(product);
+    public Mono<Producto> save(Producto producto) {
+        return repository.save(producto);
     }
 
-    public Mono<Void> update(int id, Product updated){
-        return repository.updateProduct(
-                id,
-                updated.getName(),
-                updated.getDescription(),
-                updated.getPrice(),
-                updated.getStock()
-        ).then();
-    }
-
-    public Mono<Product> increaseStock(int id, int amount){
+    public Mono<Producto> update(Long id, Producto updated) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new RuntimeException("Producto no encontrado")))
-                .flatMap(product -> {
-                    int newStock= product.getStock()+amount;
-                    product.setStock(newStock);
-                    return repository.save(product);
+                .flatMap(existing -> {
+                    existing.setNombre(updated.getNombre());
+                    existing.setDescripcion(updated.getDescripcion());
+                    existing.setStock(updated.getStock());
+                    existing.setPrecio(updated.getPrecio());
+                    return repository.save(existing);
                 });
     }
 
-    public Mono<Product> decreaseStock(int id, int amount){
+    public Mono<Void> actualizarStock(Long productoId, Integer cantidad) {
+        return databaseClient.sql("SELECT actualizar_stock($1, $2)")
+                .bind(0, productoId)
+                .bind(1, cantidad)
+                .then();
+    }
+
+    public Flux<Map<String, Object>> obtenerProductosBajoStock(Integer minimo) {
+        return databaseClient.sql("SELECT * FROM productos_bajo_stock($1)")
+                .bind(0, minimo)
+                .fetch().all();
+    }
+
+    public Mono<Producto> increaseStock(Long id, int amount) {
         return repository.findById(id)
                 .switchIfEmpty(Mono.error(new RuntimeException("Producto no encontrado")))
-                .flatMap(product -> {
-                    int newStock= product.getStock()-amount;
-                    if(newStock<0){
+                .flatMap(producto -> {
+                    int newStock = producto.getStock() + amount;
+                    producto.setStock(newStock);
+                    return repository.save(producto);
+                });
+    }
+
+    public Mono<Producto> decreaseStock(Long id, int amount) {
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new RuntimeException("Producto no encontrado")))
+                .flatMap(producto -> {
+                    int newStock = producto.getStock() - amount;
+                    if (newStock < 0) {
                         return Mono.error(new IllegalArgumentException("No hay suficiente stock para la operación"));
                     }
-                    product.setStock(newStock);
-                    return repository.save(product);
+                    producto.setStock(newStock);
+                    return repository.save(producto);
                 });
     }
 
-    public Mono<Void> delete(int id){
+    public Mono<Producto> updateStock(Long id, Integer newStock) {
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new RuntimeException("Producto no encontrado")))
+                .flatMap(producto -> {
+                    producto.setStock(newStock);
+                    return repository.save(producto);
+                });
+    }
+
+    public Mono<Void> delete(Long id) {
         return repository.deleteById(id);
-    }
-
-    public Mono<Void> actualizarStock(int id, int cantidad) {
-        return repository.actualizarStock(id, cantidad).then();
-    }
-
-    public Flux<Product> obtenerProductosBajoStock(int minimo) {
-        return repository.obtenerProductosBajoStock(minimo);
     }
 }

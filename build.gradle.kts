@@ -10,33 +10,30 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
 }
-// Configurar versión de Spring Cloud
+
 val springCloudVersion = "2025.0.0"
+
 dependencies {
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.34")
     annotationProcessor("org.projectlombok:lombok:1.18.34")
+
+    //SpringCloud
+    implementation("org.springframework.cloud:spring-cloud-starter-config")
+    implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 
     //Springboot
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
-    // Spring Cloud Config Client
-    implementation("org.springframework.cloud:spring-cloud-starter-config")
-    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
-    implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
-
     //Postgre
     implementation("org.postgresql:r2dbc-postgresql:1.0.5.RELEASE")
 
     //Security
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-    implementation("org.springframework.security:spring-security-oauth2-jose")
 
-    //.env
-    implementation("me.paulschwarz:spring-dotenv:3.0.0")
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
@@ -44,7 +41,6 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 }
-// Agregar gestión de dependencias de Spring Cloud
 dependencyManagement {
     imports {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")

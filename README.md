@@ -1,68 +1,44 @@
-# Microservicio de Productos
+# MS Productos
 
-Gestión de catálogo de productos con operaciones CRUD completas.
+Microservicio de productos reactivo - Versión básica.
+
+## Descripción
+MS Productos es un microservicio reactivo básico para gestión de productos:
+
+- **Arquitectura Reactiva**: Spring WebFlux para operaciones no bloqueantes
+- **Base de Datos Reactiva**: R2DBC con PostgreSQL
+- **CRUD Básico**: Crear, leer, actualizar y eliminar productos
+- **Gestión de Stock**: Control básico de inventario
+- **Service Discovery**: Registro en Eureka
+
+**Nota**: Esta es la versión básica. Para funcionalidades avanzadas (Kafka, eventos), ver `ms-productos-v2`.
 
 ## Funcionalidades
 
-- **CRUD productos**: Crear, leer, actualizar, eliminar productos
-- **Control de stock**: Incremento/decremento automático
-- **Base de datos reactiva**: R2DBC con PostgreSQL
-- **API REST**: Endpoints funcionales con WebFlux
-- **Validación de stock**: Prevención de ventas sin inventario
-- **OAuth2 Resource Server**: Validación de tokens JWT
-- **Endpoints protegidos**: Todos requieren autenticación Bearer Token
+### CRUD de Productos
+- **Crear**: Registro de productos
+- **Consultar**: Búsqueda por ID y listado
+- **Actualizar**: Modificación de productos y stock
+- **Eliminar**: Eliminación de productos
 
-## Endpoints Protegidos (requieren Bearer Token JWT)
+### Gestión de Inventario
+- **Stock Control**: Actualización de inventario
+- **Bajo Stock**: Consulta de productos con stock bajo
 
-- `GET /products` → Listar todos los productos
-- `GET /products/{id}` → Obtener producto específico
-- `POST /products` → Crear nuevo producto
-- `PUT /products/{id}` → Actualizar producto
-- `PUT /products/{id}/stock` → Actualizar stock
-- `GET /products/bajo-stock` → Productos con stock bajo
-- `DELETE /products/{id}` → Eliminar producto
-- `GET /resources/user` → Información del usuario autenticado
+## Dependencias
 
-## Configuración Docker
+### Base de Datos
+- **PostgreSQL**: Base de datos reactiva
+- **Base de datos**: `db_productos_dev`, `db_productos_qa`, `db_productos_prod`
+- **Script**: Ejecutar `database/script.sql`
 
-- **Puerto**: 8081
-- **Base de datos**: `db:5432` (PostgreSQL en contenedor)
-- **Perfil**: docker
-- **Eureka**: `registry-service:8761`
-- **OAuth2**: Resource Server con JWT validation
-- **Issuer**: `http://oauth-server:9000`
+### Servicios
+- **Registry Service**: http://localhost:8761
+- **Config Server**: http://localhost:8888
 
+## Ejecutar
 
-```
-
-## Despliegue
-
+### Desarrollo Local
 ```bash
-docker-compose up --build ms-productos
+./gradlew bootRun --spring.profiles.active=dev
 ```
-
-## Health Check
-
-- Endpoint: `http://localhost:8081/actuator/health`
-- Estado esperado: `{"status":"UP"}`
-
-## Testing OAuth2
-
-### Obtener Token (Password Grant)
-```bash
-POST http://localhost:9000/oauth2/token
-Authorization: Basic (oauth-client:12345678910)
-Body: grant_type=password&username=jose&password=123456&scope=read
-```
-
-### Usar Token en API
-```bash
-GET http://localhost:8081/resources/user
-Authorization: Bearer [access_token]
-```
-
-## Notas
-
-- Requiere PostgreSQL corriendo en puerto 5432 local
-- Todos los endpoints requieren autenticación JWT
-- Validación automática de tokens JWT desde oauth-server

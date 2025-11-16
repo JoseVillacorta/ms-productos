@@ -1,6 +1,6 @@
 package org.example.handler;
 
-import org.example.classes.Product;
+import org.example.classes.Producto;
 import org.example.service.ProductService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -13,91 +13,92 @@ import java.util.Map;
 public class ProductHandler {
     private final ProductService service;
     public ProductHandler(ProductService service){
-        this.service= service;
+        this.service = service;
     }
 
     public Mono<ServerResponse> getAll(ServerRequest request){
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(service.findAll(), Product.class);
+                .body(service.findAll(), Producto.class);
     }
 
     public Mono<ServerResponse> getById(ServerRequest request){
-        int id= Integer.parseInt(request.pathVariable("id"));
+        Long id = Long.parseLong(request.pathVariable("id"));
         return service.findById(id)
-                .flatMap(product -> ServerResponse.ok()
+                .flatMap(producto -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(product))
+                        .bodyValue(producto))
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
     public Mono<ServerResponse> create(ServerRequest request){
-        return  request.bodyToMono(Product.class)
+        return request.bodyToMono(Producto.class)
                 .flatMap(service::save)
-                .flatMap(product -> ServerResponse.ok()
+                .flatMap(producto -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(product))
+                        .bodyValue(producto))
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
     public Mono<ServerResponse> update(ServerRequest request){
-        int id= Integer.parseInt(request.pathVariable("id"));
-        return request.bodyToMono(Product.class)
-                .flatMap(product -> service.update(id, product)
-                        .then(service.findById(id)))
-                .flatMap(updatedProduct -> ServerResponse.ok()
+        Long id = Long.parseLong(request.pathVariable("id"));
+        return request.bodyToMono(Producto.class)
+                .flatMap(producto -> service.update(id, producto))
+                .flatMap(producto -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(updatedProduct))
+                        .bodyValue(producto))
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
     public Mono<ServerResponse> increaseStock(ServerRequest request){
-        int id= Integer.parseInt(request.pathVariable("id"));
+        Long id = Long.parseLong(request.pathVariable("id"));
         return request.bodyToMono(Map.class)
                 .flatMap(body ->{
-                    int amount= (int) body.get("amount");
+                    int amount = (int) body.get("amount");
                     return service.increaseStock(id, amount);
                 })
-                .flatMap(product -> ServerResponse.ok()
+                .flatMap(producto -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(product))
+                        .bodyValue(producto))
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
     public Mono<ServerResponse> decreaseStock(ServerRequest request){
-        int id= Integer.parseInt(request.pathVariable("id"));
+        Long id = Long.parseLong(request.pathVariable("id"));
         return request.bodyToMono(Map.class)
                 .flatMap(body ->{
-                    int amount= (int) body.get("amount");
+                    int amount = (int) body.get("amount");
                     return service.decreaseStock(id, amount);
                 })
-                .flatMap(product -> ServerResponse.ok()
+                .flatMap(producto -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(product))
+                        .bodyValue(producto))
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
-
-    public Mono<ServerResponse> delete(ServerRequest request){
-        int id= Integer.parseInt(request.pathVariable("id"));
-        return  service.delete(id)
-                .then(ServerResponse.noContent().build());
-    }
-
-    public Mono<ServerResponse> actualizarStock(ServerRequest request) {
-        int id = Integer.parseInt(request.pathVariable("id"));
+    public Mono<ServerResponse> updateStock(ServerRequest request) {
+        Long id = Long.parseLong(request.pathVariable("id"));
         return request.bodyToMono(Map.class)
                 .flatMap(body -> {
-                    int cantidad = (int) body.get("cantidad");
-                    return service.actualizarStock(id, cantidad)
-                            .then(ServerResponse.ok().build());
-                });
+                    Integer stock = (Integer) body.get("stock");
+                    return service.updateStock(id, stock);
+                })
+                .flatMap(producto -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(producto))
+                .switchIfEmpty(ServerResponse.notFound().build());
     }
 
-    public Mono<ServerResponse> obtenerBajoStock(ServerRequest request) {
-        int minimo = Integer.parseInt(request.queryParam("minimo").orElse("10"));
+    public Mono<ServerResponse> getBajoStock(ServerRequest request){
+        int minimo = Integer.parseInt(request.queryParam("minimo").orElse("5"));
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(service.obtenerProductosBajoStock(minimo), Product.class);
+                .body(service.obtenerProductosBajoStock(minimo), Map.class);
+    }
+
+    public Mono<ServerResponse> delete(ServerRequest request){
+        Long id = Long.parseLong(request.pathVariable("id"));
+        return service.delete(id)
+                .then(ServerResponse.noContent().build());
     }
 }

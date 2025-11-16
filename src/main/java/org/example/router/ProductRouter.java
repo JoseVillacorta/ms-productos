@@ -11,13 +11,13 @@ public class ProductRouter {
     public RouterFunction<ServerResponse> route(ProductHandler handler){
         return RouterFunctions
                 .route()
-                .GET("/products", handler::getAll)
-                .GET("/products/{id}", handler::getById)
-                .POST("/products", handler::create)
-                .PUT("/products/{id}", handler::update)
-                .PUT("/products/{id}/stock", handler::actualizarStock)
-                .GET("/products/bajo-stock", handler::obtenerBajoStock)
-                .DELETE("/products/{id}", handler::delete)
+                .GET("/api/productos", handler::getAll)
+                .GET("/api/productos/bajo-stock", handler::getBajoStock)  // Mover arriba
+                .GET("/api/productos/{id}", handler::getById)  // Después
+                .POST("/api/productos", handler::create)
+                .PUT("/api/productos/{id}", handler::update)
+                .PUT("/api/productos/{id}/stock", handler::updateStock)
+                .DELETE("/api/productos/{id}", handler::delete)
                 .build();
     }
 }
